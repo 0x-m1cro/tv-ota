@@ -28,6 +28,7 @@ if (!LITEAPI_KEY) {
 }
 
 // Initialize LiteAPI SDK
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const liteApi = require("liteapi-node-sdk")(LITEAPI_KEY || "");
 
 /**

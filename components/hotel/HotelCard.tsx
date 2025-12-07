@@ -35,7 +35,7 @@ export default function HotelCard({
   starRating,
   location,
   price,
-  amenities,
+
   isRefundable,
   boardType,
   offerId,
@@ -44,7 +44,7 @@ export default function HotelCard({
   guests,
 }: HotelCardProps) {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlistStore();
-  const [isHovered, setIsHovered] = useState(false);
+
   const inWishlist = isInWishlist(hotelId);
 
   const handleWishlistToggle = (e: React.MouseEvent) => {
@@ -86,8 +86,6 @@ export default function HotelCard({
     <Link href={buildHotelLink()}>
       <Card
         className="group overflow-hidden transition-all hover:shadow-lg"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <div className="relative aspect-[16/9] overflow-hidden bg-gray-200">
           {image ? (

@@ -73,7 +73,7 @@ function HotelDetailsContent({ params }: { params: Promise<{ id: string }> }) {
     fetchHotelData();
   }, [hotelId, checkIn, checkOut, guests]);
 
-  const handleSelectRoom = async (offerId: string, rate: Rate) => {
+  const handleSelectRoom = async (offerId: string) => {
     try {
       // Call prebook API
       const response = await fetch("/api/prebook", {
@@ -245,7 +245,7 @@ function HotelDetailsContent({ params }: { params: Promise<{ id: string }> }) {
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as "rooms" | "about" | "amenities" | "policies")}
                   className={`border-b-2 px-4 py-3 font-medium transition-colors ${
                     activeTab === tab.id
                       ? "border-blue-600 text-blue-600"

@@ -193,7 +193,7 @@ function SearchResults() {
 
         <select
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as any)}
+          onChange={(e) => setSortBy(e.target.value as "price" | "rating" | "name")}
           className="rounded-lg border border-gray-300 px-4 py-2"
         >
           <option value="price">Price: Low to High</option>

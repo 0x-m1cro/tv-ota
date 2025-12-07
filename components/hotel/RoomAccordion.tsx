@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Users, Wifi, Coffee, CheckCircle, XCircle } from "lucide-react";
+import { ChevronDown, Users, Wifi, CheckCircle, XCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
 import type { Rate } from "@/types/liteapi";
 
