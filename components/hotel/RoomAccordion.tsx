@@ -9,6 +9,7 @@ interface RoomAccordionProps {
   rooms: Array<{
     roomId: string;
     roomName: string;
+    offerId: string;
     rates: Rate[];
   }>;
   onSelectRoom: (offerId: string, rate: Rate) => void;
@@ -172,7 +173,7 @@ export default function RoomAccordion({ rooms, onSelectRoom }: RoomAccordionProp
 
                       {/* Book Button */}
                       <Button
-                        onClick={() => onSelectRoom(rate.rateId, rate)}
+                        onClick={() => onSelectRoom(room.offerId, rate)}
                         className="w-full"
                       >
                         Book This Room →

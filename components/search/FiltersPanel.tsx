@@ -185,8 +185,8 @@ export default function FiltersPanel({
         <div>
           <h3 className="mb-3 font-semibold text-gray-900">Amenities</h3>
           <div className="space-y-2">
-            {AMENITIES.map((amenity, idx) => (
-              <label key={`amenity-${idx}`} className="flex cursor-pointer items-center gap-2">
+            {AMENITIES.map((amenity) => (
+              <label key={amenity} className="flex cursor-pointer items-center gap-2">
                 <input
                   type="checkbox"
                   checked={localFilters.amenities.includes(amenity)}

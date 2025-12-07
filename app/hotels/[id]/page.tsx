@@ -111,7 +111,7 @@ function HotelDetailsContent({ params }: { params: Promise<{ id: string }> }) {
   const groupRoomsByType = () => {
     if (!hotelRates) return [];
 
-    const roomMap = new Map<string, { roomId: string; roomName: string; rates: Rate[] }>();
+    const roomMap = new Map<string, { roomId: string; roomName: string; offerId: string; rates: Rate[] }>();
 
     hotelRates.roomTypes.forEach((roomType) => {
       roomType.rates.forEach((rate) => {
@@ -121,6 +121,7 @@ function HotelDetailsContent({ params }: { params: Promise<{ id: string }> }) {
           roomMap.set(roomName, {
             roomId: roomName,
             roomName,
+            offerId: roomType.offerId,
             rates: [],
           });
         }
