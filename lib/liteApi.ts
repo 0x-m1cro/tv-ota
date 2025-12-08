@@ -1,134 +1,201 @@
 import "server-only";
+import type {
+  HotelSearchParams,
+  HotelSearchResponse,
+  HotelDetailsParams,
+  HotelDetailsResponse,
+  PrebookParams,
+  PrebookResponse,
+  BookingParams,
+  BookingResponse,
+  RetrieveBookingResponse,
+  CitiesResponse,
+  CountriesResponse,
+  FacilitiesResponse,
+  CurrenciesResponse,
+} from "@/types/liteapi";
 
 /**
  * LiteAPI Client for server-side API interactions
  * This file uses 'server-only' to ensure API keys never leak to the client
+ * Uses the official LiteAPI Node.js SDK
  */
 
-const LITEAPI_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.liteapi.travel/v3.0";
 const LITEAPI_KEY = process.env.LITEAPI_SANDBOX_KEY || process.env.LITEAPI_API_KEY;
 
 if (!LITEAPI_KEY) {
   console.warn("Warning: LITEAPI_API_KEY or LITEAPI_SANDBOX_KEY not configured");
 }
 
-/**
- * Base fetch wrapper for LiteAPI requests
- */
-async function liteApiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${LITEAPI_BASE_URL}${endpoint}`;
-  
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-Key": LITEAPI_KEY || "",
-      ...options?.headers,
-    },
-  });
+// Initialize LiteAPI SDK
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const liteApi = require("liteapi-node-sdk")(LITEAPI_KEY || "");
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`LiteAPI Error: ${response.status} - ${error}`);
+/**
+ * Search hotels by location and dates
+ */
+export async function searchHotels(
+  params: HotelSearchParams
+): Promise<HotelSearchResponse> {
+  try {
+    const result = await liteApi.getFullRates({
+      checkin: params.checkin,
+      checkout: params.checkout,
+      currency: params.currency || "USD",
+      guestNationality: params.guestNationality || "US",
+      occupancies: params.occupancies,
+      ...(params.cityName && { cityName: params.cityName }),
+      ...(params.cityId && { cityId: params.cityId }),
+      ...(params.countryCode && { countryCode: params.countryCode }),
+      ...(params.hotelIds && { hotelIds: params.hotelIds }),
+      ...(params.latitude && { latitude: params.latitude }),
+      ...(params.longitude && { longitude: params.longitude }),
+      ...(params.radius && { radius: params.radius }),
+      ...(params.minRating && { minRating: params.minRating }),
+      ...(params.starRating && { starRating: params.starRating }),
+      timeout: params.timeout || 10000,
+    });
+    return result;
+  } catch (error) {
+    console.error("Error searching hotels:", error);
+    throw new Error(`Failed to search hotels: ${error instanceof Error ? error.message : String(error)}`);
   }
-
-  return response.json();
-}
-
-/**
- * Search hotels by city
- */
-export async function searchHotels(params: {
-  cityName?: string;
-  countryCode?: string;
-  checkIn: string;
-  checkOut: string;
-  adults: number;
-  children?: number;
-  currency?: string;
-}) {
-  const queryParams = new URLSearchParams({
-    cityName: params.cityName || "",
-    countryCode: params.countryCode || "MV",
-    checkin: params.checkIn,
-    checkout: params.checkOut,
-    adults: params.adults.toString(),
-    ...(params.children && { children: params.children.toString() }),
-    currency: params.currency || "USD",
-  });
-
-  return liteApiFetch(`/hotels?${queryParams.toString()}`);
 }
 
 /**
  * Get hotel details by ID
  */
-export async function getHotelDetails(hotelId: string, currency: string = "USD") {
-  return liteApiFetch(`/hotels/${hotelId}?currency=${currency}`);
-}
-
-/**
- * Get available rooms for a hotel
- */
-export async function getAvailableRooms(params: {
-  hotelId: string;
-  checkIn: string;
-  checkOut: string;
-  adults: number;
-  children?: number;
-  currency?: string;
-}) {
-  const queryParams = new URLSearchParams({
-    hotelId: params.hotelId,
-    checkin: params.checkIn,
-    checkout: params.checkOut,
-    adults: params.adults.toString(),
-    ...(params.children && { children: params.children.toString() }),
-    currency: params.currency || "USD",
-  });
-
-  return liteApiFetch(`/hotels/rates?${queryParams.toString()}`);
+export async function getHotelDetails(
+  params: HotelDetailsParams
+): Promise<HotelDetailsResponse> {
+  try {
+    const result = await liteApi.getHotelDetails({
+      hotelId: params.hotelId,
+      currency: params.currency || "USD",
+    });
+    return result;
+  } catch (error) {
+    console.error("Error fetching hotel details:", error);
+    throw new Error(`Failed to get hotel details: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 /**
  * Prebook a room (before final booking)
+ * This validates the rate and returns final pricing with a prebookId
  */
-export async function prebookRoom(prebookId: string) {
-  return liteApiFetch(`/rates/prebook`, {
-    method: "POST",
-    body: JSON.stringify({ prebookId }),
-  });
+export async function prebookRoom(
+  params: PrebookParams
+): Promise<PrebookResponse> {
+  try {
+    const result = await liteApi.preBook({
+      offerId: params.offerId,
+      usePaymentSdk: params.usePaymentSdk || false,
+      ...(params.voucherCode && { voucherCode: params.voucherCode }),
+    });
+    return result;
+  } catch (error) {
+    console.error("Error prebooking room:", error);
+    throw new Error(`Failed to prebook room: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 /**
  * Create a booking
  */
-export async function createBooking(bookingData: {
-  prebookId: string;
-  guestInfo: {
-    guestFirstName: string;
-    guestLastName: string;
-    guestEmail: string;
-  };
-}) {
-  return liteApiFetch(`/bookings`, {
-    method: "POST",
-    body: JSON.stringify(bookingData),
-  });
+export async function createBooking(
+  params: BookingParams
+): Promise<BookingResponse> {
+  try {
+    const result = await liteApi.book({
+      prebookId: params.prebookId,
+      holder: params.holder,
+      payment: params.payment,
+      ...(params.guests && { guests: params.guests }),
+      ...(params.specialRequests && { specialRequests: params.specialRequests }),
+    });
+    return result;
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    throw new Error(`Failed to create booking: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 /**
  * Get booking details
  */
-export async function getBooking(bookingId: string) {
-  return liteApiFetch(`/bookings/${bookingId}`);
+export async function getBooking(bookingId: string): Promise<RetrieveBookingResponse> {
+  try {
+    const result = await liteApi.retrieveBooking({ bookingId });
+    return result;
+  } catch (error) {
+    console.error("Error retrieving booking:", error);
+    throw new Error(`Failed to retrieve booking: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 /**
  * Cancel a booking
  */
-export async function cancelBooking(bookingId: string) {
-  return liteApiFetch(`/bookings/${bookingId}/cancel`, {
-    method: "PUT",
-  });
+export async function cancelBooking(bookingId: string): Promise<void> {
+  try {
+    await liteApi.cancelBooking({ bookingId });
+  } catch (error) {
+    console.error("Error cancelling booking:", error);
+    throw new Error(`Failed to cancel booking: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Get list of cities
+ */
+export async function getCities(countryCode?: string): Promise<CitiesResponse> {
+  try {
+    const result = await liteApi.getCities(
+      countryCode ? { countryCode } : undefined
+    );
+    return result;
+  } catch (error) {
+    console.error("Error fetching cities:", error);
+    throw new Error(`Failed to get cities: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Get list of countries
+ */
+export async function getCountries(): Promise<CountriesResponse> {
+  try {
+    const result = await liteApi.getCountries();
+    return result;
+  } catch (error) {
+    console.error("Error fetching countries:", error);
+    throw new Error(`Failed to get countries: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Get hotel facilities list
+ */
+export async function getFacilities(): Promise<FacilitiesResponse> {
+  try {
+    const result = await liteApi.getFacilities();
+    return result;
+  } catch (error) {
+    console.error("Error fetching facilities:", error);
+    throw new Error(`Failed to get facilities: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Get currencies list
+ */
+export async function getCurrencies(): Promise<CurrenciesResponse> {
+  try {
+    const result = await liteApi.getCurrencies();
+    return result;
+  } catch (error) {
+    console.error("Error fetching currencies:", error);
+    throw new Error(`Failed to get currencies: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }

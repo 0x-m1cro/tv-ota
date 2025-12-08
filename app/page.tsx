@@ -14,8 +14,25 @@ export default function Home() {
   const [guests, setGuests] = useState("2");
 
   const handleSearch = () => {
-    // This will be implemented later to redirect to search results
-    console.log({ searchMode, destination, checkIn, checkOut, guests });
+    if (!checkIn || !checkOut) {
+      alert("Please select check-in and check-out dates");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      destination: searchMode === "destination" ? destination : "Maldives",
+      checkIn,
+      checkOut,
+      adults: guests,
+      children: "0",
+      rooms: "1",
+    });
+
+    if (searchMode === "vibe" && destination) {
+      params.append("vibe", destination);
+    }
+
+    window.location.href = `/search?${params.toString()}`;
   };
 
   return (
@@ -91,19 +108,53 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              <div className="py-8 text-center">
-                <p className="mb-4 text-lg text-gray-600">
-                  Choose your vibe and we&apos;ll find the perfect match
-                </p>
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                  {["Romantic", "Adventure", "Luxury", "Family"].map((vibe) => (
-                    <button
-                      key={vibe}
-                      className="rounded-lg border-2 border-gray-200 bg-white px-6 py-4 font-medium text-gray-700 transition-all hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600"
-                    >
-                      {vibe}
-                    </button>
-                  ))}
+              <div className="space-y-6">
+                <div className="text-center">
+                  <p className="mb-4 text-lg text-gray-600">
+                    Choose your vibe and we&apos;ll find the perfect match
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    {[
+                      { vibe: "Romantic Water Villas", icon: "💑" },
+                      { vibe: "Budget Beachfront", icon: "🏖️" },
+                      { vibe: "Luxury All-Inclusive", icon: "✨" },
+                      { vibe: "Family Paradise", icon: "👨‍👩‍👧‍👦" },
+                    ].map(({ vibe, icon }) => (
+                      <button
+                        key={vibe}
+                        onClick={() => setDestination(vibe)}
+                        className={`rounded-lg border-2 px-6 py-4 font-medium transition-all ${
+                          destination === vibe
+                            ? "border-blue-600 bg-blue-50 text-blue-600"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-blue-600 hover:bg-blue-50"
+                        }`}
+                      >
+                        <div className="text-2xl">{icon}</div>
+                        <div className="mt-2 text-sm">{vibe}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <Input
+                    label="Check-in"
+                    type="date"
+                    value={checkIn}
+                    onChange={(e) => setCheckIn(e.target.value)}
+                  />
+                  <Input
+                    label="Check-out"
+                    type="date"
+                    value={checkOut}
+                    onChange={(e) => setCheckOut(e.target.value)}
+                  />
+                  <Input
+                    label="Guests"
+                    type="number"
+                    min="1"
+                    value={guests}
+                    onChange={(e) => setGuests(e.target.value)}
+                  />
                 </div>
               </div>
             )}
